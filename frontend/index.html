@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="sq">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>She4She - Platforma e Mbështetjes Digitale</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&family=Montserrat:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link
+      href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css"
+      rel="stylesheet"
+    />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+  </head>
+
+  <body>
+    <header>
+      <div class="container">
+        <div class="logo">🌸 She4She</div>
+        <nav class="nav-links">
+          <a href="#" id="homeLink" class="active">Ballina</a>
+          <a href="#" id="statsLink">Statistika</a>
+          <a href="#" id="volunteersLink">Vullnetarët</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section id="mainPage" class="page-section active">
+        <div class="hero-section">
+          <h1>She4She</h1>
+          <p class="tagline">
+            Një hap drejt mbështetjes, një shpirt më i qetë.
+          </p>
+          <div id="status">🟢 Platforma aktive për mbështetje</div>
+        </div>
+
+        <div class="container main-content-layout">
+          <div class="column-left card">
+            <form id="helpForm">
+              <h2>Raporto një ndjesi</h2>
+              <div class="form-group">
+                <label for="location">Vendndodhja ose qyteti</label>
+                <input
+                  type="text"
+                  id="location"
+                  placeholder="P.sh., Prishtinë, Tiranë"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="type">Çfarë po ndjen?</label>
+                <input
+                  type="text"
+                  id="type"
+                  placeholder="P.sh., e stresuar, e frikësuar, e vetmuar"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="initialMessage"
+                  >Mesazhi yt (Opsionale, shfaqet në bisedë)</label
+                >
+                <textarea
+                  id="initialMessage"
+                  rows="3"
+                  placeholder="P.sh., Ndihem e vetmuar dhe kam nevojë të flas me dikë..."
+                ></textarea>
+              </div>
+              <button type="submit" class="btn primary">
+                Raporto Ndjesinë
+              </button>
+            </form>
+
+            <div id="anonymousChatContainer">
+              <!-- Ky kontjener do të mbushet nga JS për të shfaqur opsionin e bisedës anonime -->
+            </div>
+          </div>
+
+          <div class="column-right card">
+            <h2>Ndihmat në kohë reale</h2>
+            <ul id="supportList">
+              <!-- Mesazhi kur s'ka ndihma aktive. I fshehur/shfaqur nga JS -->
+              <p
+                id="empty-list-message"
+                style="
+                  text-align: center;
+                  color: var(--light-text);
+                  margin-top: 30px;
+                  font-style: italic;
+                  display: none;
+                "
+              >
+                Nuk ka kërkesa aktive për ndihmë për momentin. Ju lutemi
+                kontrolloni më vonë ose raportoni një ndjesi të re!
+              </p>
+            </ul>
+
+            <div class="separator"></div>
+            <div class="map-container">
+              <h3>Harta e Raportimeve</h3>
+              <div id="map" aria-label="Harta e raportimeve të ndjesive"></div>
+              <p class="map-info">
+                Pikat në hartë tregojnë vendndodhjet e përafërta të ndjesive të
+                raportuara.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="statsPage" class="page-section">
+        <div class="container">
+          <div class="card stats-card">
+            <h2>📊 Statistika e Ndjesive</h2>
+            <div id="statsContent">
+              <p>
+                Bazuar në <strong id="totalActiveReports">0</strong> ndjesi
+                aktive të raportuara.
+              </p>
+
+              <!-- Kontenitori për Chart.js -->
+              <div class="chart-container">
+                <canvas id="chartCanvas"></canvas>
+                <!-- Kjo ID është e rëndësishme -->
+              </div>
+
+              <h3>Ndjesitë më të shpeshta:</h3>
+              <ul id="mostFrequentFeelings">
+                <!-- Ndjesitë do të shtohen këtu nga JS -->
+              </ul>
+
+              <!-- Mesazhi kur nuk ka statistika -->
+              <p
+                id="noStatsMessage"
+                style="
+                  text-align: center;
+                  color: var(--light-text);
+                  font-size: 1.1em;
+                  margin-top: 20px;
+                  display: none;
+                "
+              >
+                Nuk ka kërkesa aktive ndihme për të shfaqur statistika ende.
+                Raportoni disa ndjesi!
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div id="volunteersModal" class="modal">
+      <div class="modal-content">
+        <span
+          class="close-button"
+          id="closeVolunteers"
+          role="button"
+          aria-label="Mbyll"
+          >&times;</span
+        >
+        <h2>Vullnetarët Tanë</h2>
+        <div id="volunteersListContainer"></div>
+
+        <div class="separator"></div>
+
+        <h3>Regjistrohu si Vullnetar</h3>
+        <form id="volunteerRegistrationForm">
+          <div class="form-group">
+            <label for="volunteerName">Emri yt i plotë</label>
+            <input
+              type="text"
+              id="volunteerName"
+              placeholder="Emri Mbiemri"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="volunteerEmail">Emaili yt</label>
+            <input
+              type="email"
+              id="volunteerEmail"
+              placeholder="email@she4she.com"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="volunteerContactNumber"
+              >Numri i Kontaktit (Opsionale)</label
+            >
+            <input
+              type="tel"
+              id="volunteerContactNumber"
+              placeholder="P.sh., +383 4X XXX XXX"
+            />
+          </div>
+          <div class="form-group">
+            <label for="volunteerMessage"
+              >Pse dëshiron të bëhesh vullnetar?</label
+            >
+            <textarea
+              id="volunteerMessage"
+              placeholder="Shkruaj një mesazh të shkurtër ose bio"
+              rows="4"
+              required
+            ></textarea>
+          </div>
+          <button type="submit" class="btn primary">Regjistrohu</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="chatModal" class="modal">
+      <div class="modal-content chat-content">
+        <span
+          class="close-button"
+          id="closeChat"
+          role="button"
+          aria-label="Mbyll"
+          >&times;</span
+        >
+        <h2 id="chatHeader">💬 Bisedë Mbështetëse</h2>
+        <div id="chatMessages" class="chat-messages" tabindex="0"></div>
+        <div class="chat-input-group">
+          <input
+            type="text"
+            id="chatInput"
+            placeholder="Shkruaj mesazhin tënd..."
+            aria-label="Shkruaj mesazhin"
+          />
+          <button
+            id="sendChatBtn"
+            class="btn primary"
+            aria-label="Dërgo mesazhin"
+          >
+            Dërgo
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="assignVolunteerModal" class="modal">
+      <div class="modal-content">
+        <span
+          class="close-button"
+          id="closeAssignVolunteerModal"
+          role="button"
+          aria-label="Mbyll"
+          >&times;</span
+        >
+        <h3>Cakto Vullnetarin</h3>
+        <div class="form-group">
+          <label for="assignVolunteerSelect">Zgjidh vullnetarin:</label>
+          <select id="assignVolunteerSelect" required>
+            <option value="">Zgjidh një vullnetar</option>
+          </select>
+        </div>
+        <button id="confirmAssignBtn" class="btn primary">
+          Konfirmo Caktimin
+        </button>
+      </div>
+    </div>
+
+    <div
+      id="globalMessage"
+      class="global-message"
+      role="alert"
+      aria-live="polite"
+    ></div>
+
+    <footer>
+      <div class="container">
+        <p>&copy; 2025 She4She. Të gjitha të drejtat të rezervuara.</p>
+      </div>
+    </footer>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js" defer></script>
+  </body>
+</html>
